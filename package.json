@@ -1,0 +1,20 @@
+{
+  "name": "hg-clm-cidps-firewall",
+  "version": "1.0.0",
+  "description": "HG-CLM / CIDPS: Zero-Leakage Local AI Research Governance & Semantic Firewall Protocol",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test_governance.js"
+  },
+  "keywords": [
+    "ai-governance",
+    "llm-firewall",
+    "zero-trust",
+    "prompt-security",
+    "sha-256",
+    "audit-trail"
+  ],
+  "author": "Autonomous Research Team",
+  "license": "MIT"
+}

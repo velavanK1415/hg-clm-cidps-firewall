@@ -1,0 +1,511 @@
+<!--
+  MODIFIED: Updated sidebar to support Pinned vs Active nodes
+  Added "Active Context" section and updated card headers
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HG-CLM / CIDPS — AI Research Governance Workbench</title>
+    <style>
+        :root {
+            --bg-base: #11111b;
+            --bg-surface: #1e1e2e;
+            --bg-card: #181825;
+            --bg-card-highlight: #24243a;
+            --accent-blue: #89b4fa;
+            --accent-green: #a6e3a1;
+            --accent-red: #f38ba8;
+            --accent-yellow: #f9e2af;
+            --accent-purple: #cba6f7;
+            --text-main: #cdd6f4;
+            --text-sub: #a6adc8;
+            --border: #45475a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* HEADER */
+        header {
+            height: 52px;
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #111;
+        }
+
+        .logo-title {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+        }
+
+        /* WORKBENCH LAYOUT */
+        .workbench-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 320px 1fr 340px;
+            gap: 1px;
+            background-color: var(--border);
+            overflow: hidden;
+        }
+
+        .panel {
+            background-color: var(--bg-base);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 14px 16px;
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* CARDS & NODES */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .card-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        textarea, input[type="text"] {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-main);
+            padding: 8px 10px;
+            font-family: inherit;
+            font-size: 13px;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus, input[type="text"]:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .node-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .node-item {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        /* Cognitive Layer Node Styles */
+        .node-item.pinned { border-left: 4px solid var(--accent-blue); background: var(--bg-card-highlight); }
+        .node-item.active { border-left: 4px solid var(--accent-green); }
+        .node-item.rejected { border-left: 3px solid var(--accent-red); opacity: 0.8; }
+        .node-item.proposal { border-left: 3px solid var(--accent-yellow); }
+
+        .btn-action {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--text-sub);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .btn-action:hover { background: var(--border); color: var(--text-main); }
+        .btn-accept { color: var(--accent-green); }
+        .btn-reject { color: var(--accent-red); }
+        .pin-btn { cursor: pointer; background: none; border: none; font-size: 14px; margin-left: auto; transition: transform 0.2s; color: var(--text-sub); }
+        .pin-btn:hover { transform: scale(1.2); color: var(--accent-blue); }
+
+        /* CENTER STREAM */
+        .stream-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .msg-bubble {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .msg-user {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            align-self: flex-end;
+        }
+
+        .msg-ai {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            align-self: flex-start;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .input-bar {
+            padding: 14px 16px;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            color: #111;
+            font-weight: 700;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary:hover { opacity: 0.9; }
+
+        /* LIVE AUDITOR PANEL (RIGHT) */
+        .gauge-card {
+            text-align: center;
+            padding: 16px;
+        }
+
+        .gauge-status {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--accent-green);
+            margin: 6px 0;
+        }
+
+        .directive-preview {
+            background: var(--bg-surface);
+            border: 1px dashed var(--border);
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--accent-yellow);
+            max-height: 160px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        /* PRE-FLIGHT APPROVAL MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            width: 540px;
+            max-width: 90vw;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+
+        /* TOAST NOTIFICATION */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            display: none;
+            align-items: center;
+            gap: 8px;
+            z-index: 10000;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo-group">
+            <div class="logo-icon">🛡️</div>
+            <div class="logo-title">HG-CLM / CIDPS Control Plane Workbench</div>
+        </div>
+        <div class="header-controls">
+            <button class="btn-primary" id="btn-export-audit" style="padding: 5px 12px; font-size: 11px; display: flex; align-items: center; gap: 4px;">📥 Export Audit Log</button>
+            <div class="status-badge" id="server-badge">
+                <div class="status-dot" id="server-dot"></div>
+                <span id="server-status">http://localhost:8080 Active</span>
+            </div>
+            <div class="status-badge">
+                <div class="status-dot" id="master-dot"></div>
+                <span id="master-status">&lt; 1ms Broadcast Sync</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN WORKBENCH -->
+    <div class="workbench-container">
+
+        <!-- LEFT PANEL: INTENT-STATE GRAPH -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>🎯 Intent-State Graph</span>
+                <span style="font-size: 10px; color: var(--text-sub);">v1.1.0 (Cognitive)</span>
+            </div>
+            <div class="panel-body">
+
+                <!-- Master Goal Card -->
+                <div class="card">
+                    <div class="card-title">🎯 Master Goal</div>
+                    <textarea id="goal-text" rows="2">Research effective neuromarketing tools strictly focusing on eye tracking</textarea>
+                </div>
+
+                <!-- Governance Pins (Mandatory/Immutable) -->
+                <div class="card">
+                    <div class="card-title">
+                        <span>📌 Governance Pins</span>
+                        <span class="badge-count" id="pinned-count" style="font-size: 10px; background: var(--border); padding: 2px 6px; border-radius: 10px;">0</span>
+                    </div>
+                    <ul class="node-list" id="constraints-list"></ul>
+                </div>
+
+                <!-- Active Context (Scratchpad/Working Memory) -->
+                <div class="card" style="border-color: var(--accent-green);">
+                    <div class="card-title">
+                        <span>⚡ Active Context</span>
+                        <span class="badge-count" id="active-count" style="font-size: 10px; background: var(--border); padding: 2px 6px; border-radius: 10px;">0</span>
+                    </div>
+                    <ul class="node-list" id="active-context-list"></ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">💡 Validated Decisions</div>
+                    <ul class="node-list" id="decisions-list"></ul>
+                </div>
+
+                <div class="card" style="border-color: var(--accent-yellow);">
+                    <div class="card-title" style="color: var(--accent-yellow);">📥 Proposals Inbox (1-Click Curation)</div>
+                    <ul class="node-list" id="proposals-list"></ul>
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="new-constraint-input" placeholder="Add constraint...">
+                        <button class="btn-primary" style="padding: 6px 12px;" id="btn-add-constraint">+</button>
+                    </div>
+                </div>
+
+                <div class="card" style="border-color: var(--accent-red);">
+                    <div class="card-title" style="color: var(--accent-red);">🚫 Double-Sided Rejection Ledger</div>
+                    <ul class="node-list" id="rejections-list"></ul>
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="new-decision-input" placeholder="Add decision...">
+                        <button class="btn-primary" style="padding: 6px 12px;" id="btn-add-decision">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER PANEL: SEARCH STREAM & MODEL SELECTION -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>💬 Governed Search & Model Execution</span>
+                <select id="model-select" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; font-size: 11px;">
+                    <option value="gpt-oss-120b">GPT-OSS 120B (Tusk Free Unlimited)</option>
+                    <option value="qwen-2.5-72b">Qwen 2.5 72B (Tusk Free Unlimited)</option>
+                    <option value="glm-5.2">GLM 5.2 (Tusk Free Unlimited)</option>
+                    <option value="deepseek-v3.2">DeepSeek V3.2 (Tusk Free Unlimited)</option>
+                    <option value="sonar">Sonar Pro (Perplexity)</option>
+                </select>
+            </div>
+
+            <div class="stream-messages" id="chat-stream">
+                <div class="msg-bubble msg-ai">
+                    🛡️ <strong>HG-CLM Governance Engine Ready:</strong><br>
+                    Type your research query below. Your prompt will be inspected in real-time by the local Control Plane server on port <code>8080</code> before transmission to your chosen model.
+                </div>
+            </div>
+
+            <div class="input-bar">
+                <input type="text" id="prompt-input" placeholder="Type prompt or paste raw research notes...">
+                <button class="btn-primary" id="btn-send-prompt">Send Prompt ⚡</button>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: RESEARCH STATE GAUGE & METRICS -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>⚡ Live Security Gauge & Metrics</span>
+            </div>
+            <div class="panel-body">
+                <div class="card gauge-card">
+                    <div class="card-title">Research State Gauge</div>
+                    <div class="gauge-status" id="gauge-status">FOCUSED</div>
+                    <div style="font-size: 11px; color: var(--text-sub);" id="gauge-sub">0 Rule Violations Detected</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📜 Active System Instruction Payload</div>
+                    <div class="directive-preview" id="directive-preview">
+                        [SYSTEM INSTRUCTION & STRICT GOVERNANCE CONSTRAINTS]
+                        1. MASTER GOAL: Loading...
+                        [END SYSTEM INSTRUCTIONS]
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📊 Control Plane Telemetry</div>
+                    <div style="font-size: 12px; display: flex; flex-direction: column; gap: 6px;">
+                        <div style="display: flex; justify-content: space-between;"><span>Inspection Latency:</span> <strong style="color: var(--accent-green);" id="telemetry-latency">2 ms</strong></div>
+                        <div style="display: flex; justify-content: space-between;"><span>IPC Broadcast Sync:</span> <strong style="color: var(--accent-blue);">&lt; 1 ms</strong></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Audit Hash Chain:</span> <strong style="color: var(--accent-purple);">SHA-256 (100% Intact)</strong></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Privacy Shield:</span> <strong style="color: var(--accent-green);">100% Local (0 Data Leaks)</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRE-FLIGHT APPROVAL MODAL -->
+    <div class="modal-overlay" id="approval-modal">
+        <div class="modal-card">
+            <div style="font-size: 16px; font-weight: 700; color: var(--accent-yellow); display: flex; align-items: center; gap: 8px;">
+                <span>⚡ Pre-Flight Elicit Auto-Aligner</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-sub);">
+                You pasted a long raw query. The Auto-Aligner parsed it against active Pinned Constraints:
+            </div>
+            <div style="font-size: 12px; font-weight: 700; color: var(--accent-green);">🟢 Compliant Sentences (Will be sent):</div>
+            <ul class="node-list" id="modal-include-list"></ul>
+            <div style="font-size: 12px; font-weight: 700; color: var(--accent-red);">🔴 Violating Sentences (Will be stripped):</div>
+            <ul class="node-list" id="modal-reject-list"></ul>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                <button class="btn-action" id="modal-btn-cancel" style="padding: 8px 14px;">Cancel</button>
+                <button class="btn-primary" id="modal-btn-approve">Approve & Send ⚡</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div class="toast-notification" id="toast-notification">
+        <span id="toast-icon">ℹ️</span>
+        <span id="toast-text">Notification message</span>
+    </div>
+
+    <script src="workbench.js"></script>
+</body>
+</html>

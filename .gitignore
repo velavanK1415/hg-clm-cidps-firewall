@@ -1,0 +1,11 @@
+# Operating System
+Thumbs.db
+.DS_Store
+
+# Local Runtime Data (Never committed)
+audit_trail.jsonl
+rejection_ledger.json
+*.log
+
+# Node dependencies (if extended)
+node_modules/
