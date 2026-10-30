@@ -14,7 +14,7 @@ Anyone can run and test this project on their own machine with **zero configurat
 ### 2. Launch Local Control Plane
 ```bash
 # Clone the repository
-git clone https://github.com/<your-username>/hg-clm-cidps-firewall.git
+git clone https://github.com/velavanK1415/hg-clm-cidps-firewall.git
 cd hg-clm-cidps-firewall
 
 # Start the governance server
@@ -86,4 +86,6 @@ flowchart LR
 - **Zero Model Overrides:** Authentic reasoning from the target model is preserved; only safety boundaries and self-correction mandates are enforced.
 
 ## 📄 License
-MIT License.
+
+This project is open-source and licensed under the [MIT License](LICENSE).
+See the [LICENSE](LICENSE) file for full details.
