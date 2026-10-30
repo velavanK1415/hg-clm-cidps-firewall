@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "HG-CLM Context Control Plane",
+  "version": "1.0.0",
+  "description": "Human-Guided Context Lifecycle Management with Cognitive Intrusion Detection and Prevention System (HG-CLM/CIDPS)",
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidebar.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": ["content_main.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": ["content_bridge.js"],
+      "run_at": "document_start",
+      "world": "ISOLATED"
+    }
+  ],
+  "action": {
+    "default_title": "Open HG-CLM Control Plane"
+  }
+}
